@@ -88,6 +88,16 @@ namespace EcsTests
             }
         }
 
+        private void IterateEntitiesByChangedFilter()
+        {
+            var filter = _ecsState.GetFilteredEntitiesByComponent<TestComponent>();
+            foreach (var entId in filter.FilteredIds())
+            {
+                ref var component = ref filter.Get(entId).GetComponent<TestComponent>();
+                component.TestValue = 0;
+            }
+        }
+
         [Test]
         public void EcsStateWorkTimeBenchmark()
         {
@@ -96,15 +106,20 @@ namespace EcsTests
             stopwatch.Start();
             CreateEntityAndAddTestComponent(MaxEntitiesCount);
             stopwatch.Stop();
-
             var elapsedCreateEntityTime = stopwatch.ElapsedMilliseconds;
+            
+            stopwatch.Start();
+            IterateEntitiesByChangedFilter();
+            stopwatch.Stop();
+            var elapsedChangedFilterWorkTime = stopwatch.ElapsedMilliseconds;
+            
             stopwatch.Start();
             IterateEntitiesByFilter();
             stopwatch.Stop();
-
             var elapsedFilterWorkTime = stopwatch.ElapsedMilliseconds;
 
-            Assert.Pass($"Entities time creation: {elapsedCreateEntityTime} ms | filter time work: {elapsedFilterWorkTime} ms");
+            Assert.Pass(
+                $"Entities time creation: {elapsedCreateEntityTime} ms | default filter time work: {elapsedFilterWorkTime} ms | changed filter time work {elapsedChangedFilterWorkTime}");
         }
 
         private void IterateEntitiesByFilter()

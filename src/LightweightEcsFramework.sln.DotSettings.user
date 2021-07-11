@@ -13,12 +13,14 @@
     &lt;TestId&gt;NUnit3x::7424CD2F-3BB9-4E99-9340-22DA9F9D3344::.NETCoreApp,Version=v2.2::Tests.WorldTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=b9fe3a22_002D2127_002D4c51_002D89d0_002Dd13a19ea4096/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="CreateEntityPass" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=b9fe3a22_002D2127_002D4c51_002D89d0_002Dd13a19ea4096/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="CreateEntityPass" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;NUnit3x::59913850-3F63-46D3-9F74-2455B0EC4814::.NETCoreApp,Version=v3.1::EcsTests.PoolTests.AddPass&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::59913850-3F63-46D3-9F74-2455B0EC4814::.NETCoreApp,Version=v3.1::EcsTests.EcsStateTests.ChangedFilterWorkTest&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::59913850-3F63-46D3-9F74-2455B0EC4814::.NETCoreApp,Version=v3.1::EcsTests.EcsStateTests.EcsStateWorkTimeBenchmark&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=d3ff1707_002D4185_002D4f79_002D8466_002D7ae537269ecc/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="EnumerationPass" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=d3ff1707_002D4185_002D4f79_002D8466_002D7ae537269ecc/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="EnumerationPass" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;NUnit3x::59913850-3F63-46D3-9F74-2455B0EC4814::.NETCoreApp,Version=v3.1::EcsTests.PoolTests.AddPass&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::59913850-3F63-46D3-9F74-2455B0EC4814::.NETCoreApp,Version=v3.1::EcsTests.PoolTests.RefGetPass&lt;/TestId&gt;&#xD;

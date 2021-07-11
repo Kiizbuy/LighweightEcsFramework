@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using EcsCore.Components;
 using EcsCore.Components.Pool;
+using EcsCore.ComponentWork;
 using EcsCore.Utils;
 using NetCodeUtils;
 
@@ -17,8 +18,10 @@ namespace EcsCore
         private readonly IDictionary<int, EntitySpace> _entitySpaces = new Dictionary<int, EntitySpace>();
         private uint _entitiesPerSpace = 1000;
         private int _poolsLength = 31;
+        private int _filtersLength = 31;
 
         private IComponentPool[] _pools = new IComponentPool[32];
+        private EntityFilter[] _filters = new EntityFilter[32];
 
         private EntitySpace GetEntitySpace(int entitySpaceId)
         {
@@ -61,6 +64,36 @@ namespace EcsCore
             pool = new ComponentPool<T>();
             _pools[typeIndex] = pool;
             return pool;
+        }
+
+        public EntityFilter<T> GetFilteredEntitiesByComponent<T>() where T : struct, IComponentData, ISerializableData
+        {
+            var typeIndex = EcsPoolTypes<T>.TypeIndex;
+            if (_filtersLength < typeIndex)
+            {
+                var filtersLength = _filters.Length << 1;
+                while (filtersLength <= typeIndex)
+                {
+                    filtersLength <<= 1;
+                }
+
+                Array.Resize(ref _filters, filtersLength);
+                _filtersLength = filtersLength;
+            }
+
+            var filter = (EntityFilter<T>) _filters[typeIndex];
+
+            if (filter != null)
+                return filter;
+
+            filter = new EntityFilter<T>(this);
+            _filters[typeIndex] = filter;
+            return filter;
+        }
+
+        internal Entity GetEntity(uint entityId)
+        {
+            return _entitiesMap[entityId];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
