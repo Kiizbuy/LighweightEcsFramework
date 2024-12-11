@@ -116,7 +116,11 @@ namespace EcsCore.Network.NetworkSocket
             Listen();
 
             Statistics.BytesReceived += (ulong)receivedBytes;
-            _arrivedDataQueue.Enqueue(new NetworkArrivedData() { EndPoint = remoteEndpoint, Data = buffer });
+            _arrivedDataQueue.Enqueue(new NetworkArrivedData()
+            {
+                EndPoint = remoteEndpoint,
+                Data = buffer
+            });
         }
 
         public void Close()
