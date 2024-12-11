@@ -5,10 +5,10 @@ namespace EcsCore
 {
     internal class EntitySpace : ICopyable<EntitySpace>
     {
-        private uint _entityId;
-        
         public readonly uint Base;
         public readonly uint Size;
+       
+        private uint _entityId;
         private readonly SortedSet<uint> _freeEntityIds;
 
         public EntitySpace(uint @base, uint size)
@@ -45,7 +45,12 @@ namespace EcsCore
         {
             return _entityId > GetMaxEntityId() && _freeEntityIds.Count == 0;
         }
-        
+
+        public bool IsSpaceEntityId(uint entityId)
+        {
+            return entityId >= GetMinEntityId() && entityId <= GetMaxEntityId();
+        }
+
         public void ReleaseEntityId(uint entityId)
         {
             if (entityId < _entityId - 1)

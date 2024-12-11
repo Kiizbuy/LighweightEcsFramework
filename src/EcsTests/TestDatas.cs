@@ -1,19 +1,60 @@
-﻿using EcsCore.Components;
-using NetCodeUtils;
+﻿using EcsCore;
+using EcsCore.Components;
+using EcsCore.Network;
+using EcsCore.Serialization;
 
 namespace EcsTests
 {
+    public struct ExcludeComponent : IComponentData, ISerializableData
+    {
+        private bool _disabled;
+        public void Serialize(ISerializePacker serializePacker)
+        {
+        }
+
+        public void Deserialize(ISerializePacker serializePacker)
+        {
+        }
+    }
+    
     public struct TestComponent : IComponentData, ISerializableData
     {
         public int TestValue;
-        public void Serialize(IPacker packer)
+
+        public void Serialize(ISerializePacker serializePacker)
         {
-            packer.WriteInt(TestValue);
+            serializePacker.Write(TestValue);
         }
 
-        public void Deserialize(IPacker packer)
+        public void Deserialize(ISerializePacker serializePacker)
         {
-            TestValue = packer.ReadInt();
+            TestValue = serializePacker.ReadInt();
+        }
+    }
+
+    public struct TestComponentData : IComponentData, ISerializableData
+    {
+        public int TestValue;
+
+        public void Serialize(ISerializePacker serializePacker)
+        {
+            serializePacker.Write(TestValue);
+        }
+
+        public void Deserialize(ISerializePacker serializePacker)
+        {
+            TestValue = serializePacker.ReadInt();
+        }
+    }
+
+    public struct ExcludeComponentData : IComponentData, ISerializableData
+    {
+        public void Serialize(ISerializePacker serializePacker)
+        {
+        }
+
+        public void Deserialize(ISerializePacker serializePacker)
+        {
         }
     }
 
@@ -22,45 +63,45 @@ namespace EcsTests
         public int Velocity;
         public int Min;
         public int Max;
-       
-        public void Serialize(IPacker packer)
+
+        public void Serialize(ISerializePacker serializePacker)
         {
-            packer.WriteFloat(Velocity);
-            packer.WriteInt(Min);
-            packer.WriteInt(Max);
+            serializePacker.Write(Velocity);
+            serializePacker.Write(Min);
+            serializePacker.Write(Max);
         }
 
-        public void Deserialize(IPacker packer)
+        public void Deserialize(ISerializePacker serializePacker)
         {
-            Velocity = packer.ReadInt();
-            Min = packer.ReadInt();
-            Max = packer.ReadInt();
+            Velocity = serializePacker.ReadInt();
+            Min = serializePacker.ReadInt();
+            Max = serializePacker.ReadInt();
         }
 
-        public void SerializeDiffable(IPacker packer, TestSerializeDiffData other)
-        {
-            var diffableData = other;
-            
-            packer.WriteBool(Velocity != diffableData.Velocity);
-            if(Velocity != diffableData.Velocity)
-                packer.WriteInt(Velocity);
-            
-            packer.WriteBool(Min != diffableData.Min);
-            if(Min != diffableData.Min)
-                packer.WriteInt(Min);
-
-            packer.WriteBool(Max != diffableData.Max);
-            if(Max != diffableData.Max)
-                packer.WriteInt(Max);
-        }
-
-        public void DeserializeDiffable(IPacker packer, TestSerializeDiffData other)
+        public void SerializeDiffable(ISerializePacker serializePacker, TestSerializeDiffData other)
         {
             var diffableData = other;
 
-            Velocity = packer.ReadBool() ? packer.ReadInt() : diffableData.Velocity;
-            Min = packer.ReadBool() ? packer.ReadInt() : diffableData.Min;
-            Max = packer.ReadBool() ? packer.ReadInt() : diffableData.Max;
+            serializePacker.Write(Velocity != diffableData.Velocity);
+            if (Velocity != diffableData.Velocity)
+                serializePacker.Write(Velocity);
+
+            serializePacker.Write(Min != diffableData.Min);
+            if (Min != diffableData.Min)
+                serializePacker.Write(Min);
+
+            serializePacker.Write(Max != diffableData.Max);
+            if (Max != diffableData.Max)
+                serializePacker.Write(Max);
+        }
+
+        public void DeserializeDiffable(ISerializePacker serializePacker, TestSerializeDiffData other)
+        {
+            var diffableData = other;
+
+            Velocity = serializePacker.ReadBool() ? serializePacker.ReadInt() : diffableData.Velocity;
+            Min = serializePacker.ReadBool() ? serializePacker.ReadInt() : diffableData.Min;
+            Max = serializePacker.ReadBool() ? serializePacker.ReadInt() : diffableData.Max;
 
         }
     }

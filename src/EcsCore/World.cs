@@ -7,12 +7,15 @@ namespace EcsCore
 {
     public sealed class World
     {
+        public event Action SimulationEnded;
+        public event Action SimulationBegin;
+        
         private readonly ISet<IEcsRunOnceSystem> _allRunOnceSystems = new HashSet<IEcsRunOnceSystem>();
+        private readonly ISet<IEcsRunOnceViewSystem> _allRunOnceViewSystems = new HashSet<IEcsRunOnceViewSystem>();
         private readonly ISet<IEcsSimulationSystem> _allSimulationSystems = new HashSet<IEcsSimulationSystem>();
         private readonly ISet<IEcsViewSystem> _allViewSystems = new HashSet<IEcsViewSystem>();
-        
+
         private EcsState _current;
-        private EcsState _previous;
 
         private CircularBuffer<EcsState> _statesBuffer;
 
@@ -23,22 +26,19 @@ namespace EcsCore
         private uint _simTick;
         private uint _renderTick;
 
-        public World SetupWorld(int maxStateBufferSize, Func<EcsState> createState)
+        public World (int maxStateBufferSize, Func<EcsState> createState)
         {
             _statesBuffer = new CircularBuffer<EcsState>();
-            
+
             var buffer = new EcsState[maxStateBufferSize];
             for (int i = 0; i < buffer.Length; i++)
             {
                 buffer[i] = createState();
             }
-            
+
             _statesBuffer.SetBuffer(buffer);
-            
+
             _current = _statesBuffer.GetNext();
-            _previous = _statesBuffer.Current;
-            
-            return this;
         }
 
         public World AddSystem(IEcsSystem system)
@@ -58,6 +58,7 @@ namespace EcsCore
                     _allViewSystems.Add(ecsViewSystem);
                     break;
             }
+
             return this;
         }
 
@@ -75,39 +76,65 @@ namespace EcsCore
                     _allViewSystems.Remove(ecsViewSystem);
                     break;
             }
+
             return this;
         }
 
         public void Simulate()
         {
-            var current = _statesBuffer.Current;
+            var prev = _statesBuffer.Current;
             var next = _statesBuffer.GetNext();
-            
-            if (current != next)
+
+            if (prev != next)
             {
-                current.CopyTo(next);
+                prev.CopyTo(next);
             }
-            
-            next.Tick = current.Tick + 1;
-            
+
+#if DEBUG
+            _current.Unlock();
+#endif
+
+            _current.LocalTick = prev.LocalTick + 1;
+            _current.SimTick = prev.SimTick + 1;
+
             foreach (var runOnce in _allRunOnceSystems)
             {
                 runOnce.Run(_current);
             }
-            
+
             _allRunOnceSystems.Clear();
-            
+
             foreach (var simulationSystem in _allSimulationSystems)
             {
-                simulationSystem.Simulate(_current, _simTick);
+                simulationSystem.Simulate(_current, _current.SimTick);
             }
+
+            _current.ProcessRemoved();
+            var nextIndex = _statesBuffer.GetNextIndex();
+            var temp = _statesBuffer.GetBuffer[nextIndex];
+            _statesBuffer.GetBuffer[nextIndex] = _current;
+#if DEBUG
+            _current.Lock();
+#endif
+            _current = temp;
+            _statesBuffer.GetNext();
         }
 
-        public void UpdateViewSystem()
+        public void UpdateView(EcsState current, EcsState previous, float delta, float tickPercentage)
         {
+            if (_allRunOnceViewSystems.Count > 0)
+            {
+                foreach (var sys in _allRunOnceSystems)
+                {
+                    sys.Run(current);
+                }
+
+                _allRunOnceViewSystems.Clear();
+            }
+
             foreach (var viewSystem in _allViewSystems)
             {
-                viewSystem.Update(_previous, _current);
+                viewSystem.Update(current, previous, delta, tickPercentage);
             }
         }
     }

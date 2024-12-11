@@ -13,10 +13,15 @@
     {
         void Run(EcsState current);
     }
+    
+    public interface IEcsRunOnceViewSystem : IEcsSystem
+    {
+        void Run(EcsState current);
+    }
 
     public interface IEcsViewSystem : IEcsSystem
     {
-        void Update(EcsState previous, EcsState current);
+        void Update(EcsState previous, EcsState current, float delta, float tickPercentage);
     }
 
     public interface IEcsSimulationSystem : IEcsSystem

@@ -1,45 +1,138 @@
-﻿using EcsCore.Components;
-using NetCodeUtils;
+﻿using System;
+using System.Runtime.CompilerServices;
+using EcsCore.Components;
 
 namespace EcsCore
 {
-    public readonly struct Entity
+    public struct Entity : IEquatable<Entity>, IPollableData
     {
-        private readonly uint _entityId;
-        private readonly EcsState _ecsState;
-        
-        public Entity(EcsState ecsState, uint entityId)
+        internal int AddedComponentsMask;
+        internal int AddedViewComponentsMask;
+
+        private EcsState _ownerState;
+        private int _index;
+        private uint _entityId;
+        private bool _disabled;
+
+        internal Entity(EcsState ownerState, uint entityId, int index)
         {
-            _ecsState = ecsState;
+            AddedComponentsMask = 0;
+            AddedViewComponentsMask = 0;
+            _ownerState = ownerState;
             _entityId = entityId;
+            _index = index;
+            _disabled = false;
         }
 
-        public ref T AddComponent<T>() where T : struct, IComponentData, ISerializableData
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void ChangeStateOwner(EcsState newOwner)
         {
-            return ref _ecsState.GetPool<T>().Add(_entityId, new T());
-        }
-        
-        public ref T AddComponent<T>(T value) where T : struct, IComponentData, ISerializableData
-        {
-            return ref _ecsState.GetPool<T>().Add(_entityId, value);
+            _ownerState = newOwner;
         }
 
-        public bool RemoveComponent<T>() where T : struct, IComponentData, ISerializableData
+        public int OwnerId
         {
-            return _ecsState.GetPool<T>().RemoveByEntityId(_entityId);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _ownerState.GetOwnerId(_entityId);
         }
 
-        public ref T GetComponent<T>() where T : struct, IComponentData, ISerializableData
+        public uint Id
         {
-            return ref _ecsState.GetPool<T>().Get(_entityId);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _entityId;
         }
 
-        public bool HasComponent<T>() where T : struct, IComponentData, ISerializableData
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref T AddComponent<T>() where T : struct, IComponentData
         {
-            _ecsState.GetPool<T>().Get(_entityId, out var componentValueExist);
-            return componentValueExist;
+            var typeIndex = EcsComponentTypes<T>.TypeBitMask;
+            ref var own = ref _ownerState.GetEntityDataPool[_index];
+            own.AddedComponentsMask |= typeIndex;
+            return ref _ownerState.GetPool<T>().Add(_entityId, new T());
         }
 
-        public int GetOwnerId() => _ecsState.GetOwnerId(_entityId);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref T AddComponent<T>(T value) where T : struct, IComponentData
+        {
+            var typeIndex = EcsComponentTypes<T>.TypeBitMask;
+            ref var own = ref _ownerState.GetEntityDataPool[_index];
+            own.AddedComponentsMask |= typeIndex;
+            return ref _ownerState.GetPool<T>().Add(_entityId, value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool RemoveComponent<T>() where T : struct, IComponentData
+        {
+            var typeBitMask = EcsComponentTypes<T>.TypeBitMask;
+            ref var own = ref _ownerState.GetEntityDataPool[_index];
+            own.AddedComponentsMask &= ~typeBitMask;
+            return _ownerState.GetPool<T>().MarkAsRemoved(_entityId);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref T GetComponent<T>() where T : struct, IComponentData
+        {
+            return ref _ownerState.GetPool<T>().Get(_entityId);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasComponent<T>() where T : struct, IComponentData
+        {
+            var typeBit = EcsComponentTypes<T>.TypeBitMask;
+            return (AddedComponentsMask & typeBit) == typeBit;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasNoComponents()
+        {
+            return AddedComponentsMask == 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Equals(Entity other)
+        {
+            return _entityId == other._entityId
+                   && AddedComponentsMask == other.AddedComponentsMask
+                   && OwnerId == other.OwnerId
+                   && _index == other._index
+                   && _disabled == other._disabled;
+        }
+
+        bool IPollableData.Disabled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _disabled;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _disabled = value;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(Entity a, Entity b)
+        {
+            return a.Equals(b);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator !=(Entity a, Entity b)
+        {
+            return !a.Equals(b);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Entity other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = AddedComponentsMask;
+                hashCode = (hashCode * 397) ^ _index;
+                hashCode = (hashCode * 397) ^ (int)_entityId;
+                hashCode = (hashCode * 397) ^ _disabled.GetHashCode();
+                return hashCode;
+            }
+        }
     }
 }

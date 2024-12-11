@@ -25,7 +25,7 @@ namespace EcsTests
         [TearDown]
         public void TearDown()
         {
-            _pool.Clear();
+            _pool.ProcessRemoved();
         }
 
         [Test]
@@ -40,6 +40,20 @@ namespace EcsTests
         }
 
         [Test]
+        public void MarkRemoveTest()
+        {
+            _pool.Add(TestEntityId, new TestComponent()
+            {
+                TestValue = 1
+            });
+
+            _pool.MarkAsRemoved(TestEntityId);
+            _pool.ProcessRemoved();
+            
+            Assert.AreEqual(_pool.Count,  0);
+        }
+
+        [Test]
         public void RefGetPass()
         {
             const int newValue = 5;
@@ -49,8 +63,9 @@ namespace EcsTests
             });
             ref var component = ref _pool.Get(TestEntityId);
             component.TestValue = newValue;
+            ref var newComponent = ref _pool.Get(TestEntityId);
             
-            Assert.AreEqual(component.TestValue, newValue);
+            Assert.AreEqual(newComponent.TestValue, newValue);
         }
 
         [Test]
